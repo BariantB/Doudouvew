@@ -25,6 +25,14 @@ namespace Doudouvew
                 _life = value;
             }
         }
+        public int _FieldBoost {
+            get {
+                return _fieldBoost;
+            }
+            set {
+                _fieldBoost = value;
+            }
+        }
         public string _Name {
             get {
                 return _name;
@@ -694,13 +702,25 @@ namespace Doudouvew
             }
             return damagedChallengers;
         }
+        public int findBoost(Pokemon pokemon) {
+            if (pokemon._FieldBoost == _field) {
+                if (typeof(Attacker).IsInstanceOfType(pokemon)) {
+                    Attacker attacker = (Attacker)pokemon;
+                    return attacker._AttackPoints * 15 / 100;
+                } else {
+                    Defender defender = (Defender)pokemon;
+                    return defender._DefensePoints * 10 / 100;
+                }
+            }
+            return 0;
+        }
         public void damageStep(List<int> firstAttack, List<int> secondAttack, List<int> playerOneChallengers, List<int> playerTwoChallengers) {
             for (int i = 0; i != playerOneChallengers.Count(); ++i) {
                 if (typeof(Attacker).IsInstanceOfType(_playerOne._Pokemons[playerOneChallengers[i]].Item2)) {
                     Attacker firstAttacker = (Attacker)_playerOne._Pokemons[playerOneChallengers[i]].Item2;
                     if (typeof(Attacker).IsInstanceOfType(_playerTwo._Pokemons[firstAttack[i]].Item2)) {
                         Attacker secondAttacker = (Attacker)_playerTwo._Pokemons[firstAttack[i]].Item2;
-                        int diff = firstAttacker._AttackPoints - secondAttacker._AttackPoints;
+                        int diff = (firstAttacker._AttackPoints + findBoost(firstAttacker)) - (secondAttacker._AttackPoints + findBoost(secondAttacker));
                         if (diff > 0) {
                             _playerTwo._Pokemons[firstAttack[i]].Item2._Life -= 10;
                             Console.WriteLine(_playerOne._Pokemons[playerOneChallengers[i]].Item2._Name + " a infligé 10 dégâts à " + _playerTwo._Pokemons[firstAttack[i]].Item2._Name + " grâce à " + _playerOne._Pokemons[playerOneChallengers[i]].Item2._AttackName);
@@ -713,7 +733,7 @@ namespace Doudouvew
                     }
                     if (typeof(Defender).IsInstanceOfType(_playerTwo._Pokemons[firstAttack[i]].Item2)) {
                         Defender secondDefender = (Defender)_playerTwo._Pokemons[firstAttack[i]].Item2;
-                        int diff = firstAttacker._AttackPoints - secondDefender._DefensePoints;
+                        int diff = (firstAttacker._AttackPoints + findBoost(firstAttacker)) - (secondDefender._DefensePoints + findBoost(secondDefender));
                         if (diff > 0) {
                             _playerTwo._Pokemons[firstAttack[i]].Item2._Life -= diff;
                             Console.WriteLine(_playerOne._Pokemons[playerOneChallengers[i]].Item2._Name + " a infligé " + Math.Abs(diff) + " dégâts à " + _playerTwo._Pokemons[firstAttack[i]].Item2._Name + " grâce à " + _playerOne._Pokemons[playerOneChallengers[i]].Item2._AttackName);
@@ -729,7 +749,7 @@ namespace Doudouvew
                     Defender firstDefender = (Defender)_playerOne._Pokemons[playerOneChallengers[i]].Item2;
                     if (typeof(Attacker).IsInstanceOfType(_playerTwo._Pokemons[firstAttack[i]].Item2)) {
                         Attacker secondAttacker = (Attacker)_playerTwo._Pokemons[firstAttack[i]].Item2;
-                        int diff = firstDefender._DefensePoints - secondAttacker._AttackPoints;
+                        int diff = (firstDefender._DefensePoints + findBoost(firstDefender)) - (secondAttacker._AttackPoints + findBoost(secondAttacker));
                         if (diff > 0) {
                             _playerTwo._Pokemons[firstAttack[i]].Item2._Life -= diff;
                             Console.WriteLine(_playerOne._Pokemons[playerOneChallengers[i]].Item2._Name + " a infligé " + Math.Abs(diff) + " dégâts à " + _playerTwo._Pokemons[firstAttack[i]].Item2._Name + " grâce à " + _playerOne._Pokemons[playerOneChallengers[i]].Item2._AttackName);
@@ -742,16 +762,16 @@ namespace Doudouvew
                     }
                     if (typeof(Defender).IsInstanceOfType(_playerTwo._Pokemons[firstAttack[i]].Item2)) {
                         Defender secondDefender = (Defender)_playerTwo._Pokemons[firstAttack[i]].Item2;
-                        int diff = firstDefender._DefensePoints - secondDefender._DefensePoints;
-                        if (diff > 0) {
-                            _playerTwo._Pokemons[firstAttack[i]].Item2._Life -= 10;
-                            Console.WriteLine(_playerOne._Pokemons[playerOneChallengers[i]].Item2._Name + " a infligé 10 dégâts à " + _playerTwo._Pokemons[firstAttack[i]].Item2._Name + " grâce à " + _playerOne._Pokemons[playerOneChallengers[i]].Item2._AttackName);
-                        } else if (diff < 0) {
+                        if (firstDefender._FieldBoost != _field) {
                             _playerOne._Pokemons[playerOneChallengers[i]].Item2._Life -= 10;
-                            Console.WriteLine(_playerTwo._Pokemons[firstAttack[i]].Item2._Name + " a infligé 10 dégâts à " + _playerOne._Pokemons[playerOneChallengers[i]].Item2._Name + " grâce à " + _playerTwo._Pokemons[firstAttack[i]].Item2._AttackName);
-                        } else {
-                            Console.WriteLine("La défense des deux combattants étant égales, personne n'a perdu de point de vie.");
+                            Console.WriteLine(_playerOne._Pokemons[playerOneChallengers[i]].Item2._Name + " n'est pas dans son élément. Il perd 10 points de vie");
                         }
+                        if (secondDefender._FieldBoost != _field) {
+                            _playerTwo._Pokemons[firstAttack[i]].Item2._Life -= 10;
+                            Console.WriteLine(_playerTwo._Pokemons[firstAttack[i]].Item2._Name + " n'est pas dans son élément. Il perd 10 points de vie");
+                        }
+                        if (firstDefender._FieldBoost == _field && secondDefender._FieldBoost == _field)
+                            Console.WriteLine("Les deux défenseurs sont sur leur élément. Aucun ne perd de points de vie.");
                     }
                 }
                 Console.Write("Appuyez sur une touche pour découvrir le combat suivant");
@@ -763,7 +783,7 @@ namespace Doudouvew
                     Attacker firstAttacker = (Attacker)_playerTwo._Pokemons[playerTwoChallengers[i]].Item2;
                     if (typeof(Attacker).IsInstanceOfType(_playerOne._Pokemons[secondAttack[i]].Item2)) {
                         Attacker secondAttacker = (Attacker)_playerOne._Pokemons[secondAttack[i]].Item2;
-                        int diff = firstAttacker._AttackPoints - secondAttacker._AttackPoints;
+                        int diff = (firstAttacker._AttackPoints + findBoost(firstAttacker)) - (secondAttacker._AttackPoints + findBoost(secondAttacker));
                         if (diff > 0) {
                             _playerOne._Pokemons[secondAttack[i]].Item2._Life -= 10;
                             Console.WriteLine(_playerTwo._Pokemons[playerTwoChallengers[i]].Item2._Name + " a infligé 10 dégâts à " + _playerOne._Pokemons[secondAttack[i]].Item2._Name + " grâce à " + _playerTwo._Pokemons[playerTwoChallengers[i]].Item2._AttackName);
@@ -776,7 +796,7 @@ namespace Doudouvew
                     }
                     if (typeof(Defender).IsInstanceOfType(_playerOne._Pokemons[secondAttack[i]].Item2)) {
                         Defender secondDefender = (Defender)_playerOne._Pokemons[secondAttack[i]].Item2;
-                        int diff = firstAttacker._AttackPoints - secondDefender._DefensePoints;
+                        int diff = (firstAttacker._AttackPoints + findBoost(firstAttacker)) - (secondDefender._DefensePoints + findBoost(secondDefender));
                         if (diff > 0) {
                             _playerOne._Pokemons[secondAttack[i]].Item2._Life -= diff;
                             Console.WriteLine(_playerTwo._Pokemons[playerTwoChallengers[i]].Item2._Name + " a infligé " + Math.Abs(diff) + " dégâts à " + _playerOne._Pokemons[secondAttack[i]].Item2._Name + " grâce à " + _playerTwo._Pokemons[playerTwoChallengers[i]].Item2._AttackName);
@@ -792,7 +812,7 @@ namespace Doudouvew
                     Defender firstDefender = (Defender)_playerTwo._Pokemons[playerTwoChallengers[i]].Item2;
                     if (typeof(Attacker).IsInstanceOfType(_playerOne._Pokemons[secondAttack[i]].Item2)) {
                         Attacker secondAttacker = (Attacker)_playerOne._Pokemons[secondAttack[i]].Item2;
-                        int diff = firstDefender._DefensePoints - secondAttacker._AttackPoints;
+                        int diff = (firstDefender._DefensePoints + findBoost(firstDefender)) - (secondAttacker._AttackPoints + findBoost(secondAttacker));
                         if (diff > 0) {
                             _playerOne._Pokemons[secondAttack[i]].Item2._Life -= diff;
                             Console.WriteLine(_playerTwo._Pokemons[playerTwoChallengers[i]].Item2._Name + " a infligé " + Math.Abs(diff) + " dégâts à " + _playerOne._Pokemons[secondAttack[i]].Item2._Name + " grâce à " + _playerTwo._Pokemons[playerTwoChallengers[i]].Item2._AttackName);
@@ -805,16 +825,16 @@ namespace Doudouvew
                     }
                     if (typeof(Defender).IsInstanceOfType(_playerOne._Pokemons[secondAttack[i]].Item2)) {
                         Defender secondDefender = (Defender)_playerOne._Pokemons[secondAttack[i]].Item2;
-                        int diff = firstDefender._DefensePoints - secondDefender._DefensePoints;
-                        if (diff > 0) {
-                            _playerOne._Pokemons[secondAttack[i]].Item2._Life -= 10;
-                            Console.WriteLine(_playerTwo._Pokemons[playerTwoChallengers[i]].Item2._Name + " a infligé 10 dégâts à " + _playerOne._Pokemons[secondAttack[i]].Item2._Name + " grâce à " + _playerTwo._Pokemons[playerTwoChallengers[i]].Item2._AttackName);
-                        } else if (diff < 0) {
+                        if (firstDefender._FieldBoost != _field) {
                             _playerTwo._Pokemons[playerTwoChallengers[i]].Item2._Life -= 10;
-                            Console.WriteLine(_playerOne._Pokemons[secondAttack[i]].Item2._Name + " a infligé 10 dégâts à " + _playerTwo._Pokemons[playerTwoChallengers[i]].Item2._Name + " grâce à " + _playerOne._Pokemons[secondAttack[i]].Item2._AttackName);
-                        } else {
-                            Console.WriteLine("La défense des deux combattants étant égales, personne n'a perdu de point de vie.");
+                            Console.WriteLine(_playerTwo._Pokemons[playerTwoChallengers[i]].Item2._Name + " n'est pas dans son élément. Il perd 10 points de vie");
                         }
+                        if (secondDefender._FieldBoost != _field) {
+                            _playerOne._Pokemons[secondAttack[i]].Item2._Life -= 10;
+                            Console.WriteLine(_playerOne._Pokemons[secondAttack[i]].Item2._Name + " n'est pas dans son élément. Il perd 10 points de vie");
+                        }
+                        if (firstDefender._FieldBoost == _field && secondDefender._FieldBoost == _field)
+                            Console.WriteLine("Les deux défenseurs sont sur leur élément. Aucun ne perd de points de vie.");
                     }
                 }
                 Console.Write("Appuyez sur une touche pour découvrir le combat suivant");
